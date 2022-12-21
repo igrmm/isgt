@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -25,25 +26,30 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	SDL_Surface* bmp = SDL_LoadBMP("img.bmp");
-	if (bmp == NULL) {
-		fprintf(stderr, "SDL_LoadBMP Error: %s\n", SDL_GetError());
+	int imgFlags = IMG_INIT_PNG;
+	if(!(IMG_Init(imgFlags) & imgFlags)) 	{
+		printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
+	}
+
+	SDL_Surface* loaded_surface = IMG_Load("img.png");
+	if (loaded_surface == NULL) {
+		fprintf(stderr, "PNG Error: %s\n", SDL_GetError());
 		SDL_DestroyRenderer(ren);
 		SDL_DestroyWindow(win);
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
 
-	SDL_Texture* tex = SDL_CreateTextureFromSurface(ren, bmp);
+	SDL_Texture* tex = SDL_CreateTextureFromSurface(ren, loaded_surface);
 	if (tex == NULL) {
 		fprintf(stderr, "SDL_CreateTextureFromSurface Error: %s\n", SDL_GetError());
-		SDL_FreeSurface(bmp);
+		SDL_FreeSurface(loaded_surface);
 		SDL_DestroyRenderer(ren);
 		SDL_DestroyWindow(win);
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
-	SDL_FreeSurface(bmp);
+	SDL_FreeSurface(loaded_surface);
 
 	for (int i = 0; i < 20; i++) {
 		SDL_RenderClear(ren);
