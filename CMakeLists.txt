@@ -1,10 +1,19 @@
-project(hello)
 cmake_minimum_required(VERSION 3.0)
+project(isgt)
 
-add_executable(hello src/main.c)
+set(LIBS SDL2 SDL2_image)
 
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
+foreach(LIB IN LISTS LIBS)
+	find_package(${LIB} REQUIRED)
+endforeach()
 
-target_link_libraries(hello PRIVATE SDL2)
-target_link_libraries(hello PRIVATE SDL2_image)
+include_directories(${SDL2_INCLUDE_DIRS})
+
+add_executable(${PROJECT_NAME} WIN32 src/main.c)
+
+if(MINGW)
+	target_link_libraries(${PROJECT_NAME} PRIVATE mingw32)
+endif()
+
+list(INSERT LIBS 0 SDL2main)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
