@@ -27,7 +27,7 @@ int main()
 	}
 
 	int imgFlags = IMG_INIT_PNG;
-	if(!(IMG_Init(imgFlags) & imgFlags)) 	{
+	if(!(IMG_Init(imgFlags) & imgFlags))	{
 		printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
 	}
 
