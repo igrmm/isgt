@@ -5,3 +5,5 @@ android/com.igrmm.isgt/.gradle/
 android/com.igrmm.isgt/app/.cxx/
 android/com.igrmm.isgt/app/build/
 android/com.igrmm.isgt/.idea
+.cache
+build
