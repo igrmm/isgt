@@ -9,9 +9,12 @@ foreach(LIB IN LISTS LIBS)
     find_package(${LIB} REQUIRED)
 endforeach()
 
-include_directories(${SDL2_INCLUDE_DIRS})
+add_executable(${PROJECT_NAME}
+    WIN32
+    src/main.c
+    )
 
-add_executable(${PROJECT_NAME} WIN32 src/main.c)
+target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 
 if(MINGW)
     target_link_libraries(${PROJECT_NAME} PRIVATE mingw32)
