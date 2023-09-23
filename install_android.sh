@@ -3,17 +3,18 @@
 SDL_COMMIT=tags/release-2.28.3
 SDL_IMAGE_COMMIT=tags/release-2.6.3
 SDL_TTF_COMMIT=tags/release-2.20.2
+ANDROID_PROJECT=com.igrmm.isgt
 
 mkdir -p build
 
-if [ ! -d "android" ]; then
+if [ ! -d "build/android" ]; then
     cd build
     mkdir -p android && cd android
     git clone https://github.com/libsdl-org/SDL/
-    cd SDL && git checkout $SDL_COMMIT
-    mv android-project ../ && cd ../
-    cd android-project/app/jni/
-    mv ../../../SDL ./
+    cd SDL && git checkout $SDL_COMMIT && cd build-scripts
+    ./androidbuild.sh $ANDROID_PROJECT /dev/null
+    cd ../ && mv build/$ANDROID_PROJECT ../ && cd ../
+    cd $ANDROID_PROJECT/app/jni/
     git clone https://github.com/libsdl-org/SDL_image.git
     cd SDL_image && git checkout $SDL_IMAGE_COMMIT && cd ../
     git clone https://github.com/libsdl-org/SDL_ttf.git
@@ -41,8 +42,8 @@ if [ ! -d "android" ]; then
         > src/Android.mk
 
     cd ../../../../../
-    ln -s $(pwd)/assets build/android/android-project/app/src/main/
+    ln -s $(pwd)/assets build/android/$ANDROID_PROJECT/app/src/main/
 fi
-cd build/android/android-project/
+cd build/android/$ANDROID_PROJECT/
 ./gradlew installDebug
 cd ../../../
