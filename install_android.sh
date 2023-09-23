@@ -4,6 +4,7 @@ SDL_COMMIT=tags/release-2.28.3
 SDL_IMAGE_COMMIT=tags/release-2.6.3
 SDL_TTF_COMMIT=tags/release-2.20.2
 ANDROID_PROJECT=com.igrmm.isgt
+APP_NAME=ISGT
 
 mkdir -p build
 
@@ -41,7 +42,10 @@ if [ ! -d "build/android" ]; then
     include $(BUILD_SHARED_LIBRARY)'\
         > src/Android.mk
 
-    cd ../../../../../
+    cd ../
+    sed -i "s/Game/$APP_NAME/" src/main/res/values/strings.xml
+
+    cd ../../../../
     ln -s $(pwd)/assets build/android/$ANDROID_PROJECT/app/src/main/
 fi
 cd build/android/$ANDROID_PROJECT/
