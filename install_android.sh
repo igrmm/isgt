@@ -45,6 +45,8 @@ if [ ! -d "build/android" ]; then
     cd ../
     sed -i "s/Game/$APP_NAME/" src/main/res/values/strings.xml
 
+    sed -i "/<activity android:name/a \            android:screenOrientation=\"landscape\"" src/main/AndroidManifest.xml
+
     cd ../../../../
     ln -s $(pwd)/assets build/android/$ANDROID_PROJECT/app/src/main/
 fi
