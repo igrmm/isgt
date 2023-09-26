@@ -22,25 +22,10 @@ if [ ! -d "build/android" ]; then
     cd SDL_ttf && git checkout $SDL_TTF_COMMIT && git submodule update --init
     cd ../
 
-    echo \
-        'LOCAL_PATH := $(call my-dir)
-
-    include $(CLEAR_VARS)
-
-    LOCAL_MODULE := main
-
-    SDL_PATH := ../SDL
-
-    LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include $(LOCAL_PATH)/../SDL_image/ $(LOCAL_PATH)/../SDL_ttf/
-
-    LOCAL_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../../../../../src/*.c)
-
-    LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image SDL2_ttf
-
-    LOCAL_LDLIBS := -lGLESv1_CM -lGLESv2 -lOpenSLES -llog -landroid
-
-    include $(BUILD_SHARED_LIBRARY)'\
-        > src/Android.mk
+    #scaping $ and /
+    sed -i "/LOCAL_C_INCLUDES.*/ s/$/ \$(LOCAL_PATH)\/..\/SDL_image\/ \$(LOCAL_PATH)\/..\/SDL_ttf\//" src/Android.mk
+    sed -i "s/LOCAL_SRC_FILES.*/LOCAL_SRC_FILES := \$(wildcard \$(LOCAL_PATH)\/..\/..\/..\/..\/..\/..\/src\/*.c)/" src/Android.mk
+    sed -i "/LOCAL_SHARED_LIBRARIES.*/ s/$/ SDL2_image SDL2_ttf/" src/Android.mk
 
     cd ../
     sed -i "s/Game/$APP_NAME/" src/main/res/values/strings.xml
