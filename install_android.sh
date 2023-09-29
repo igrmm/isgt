@@ -32,6 +32,17 @@ if [ ! -d "build/android" ]; then
 
     sed -i "/<activity android:name/a \            android:screenOrientation=\"landscape\"" src/main/AndroidManifest.xml
 
+    mkdir src/main/res/values-v27/
+    echo '<?xml version="1.0" encoding="utf-8"?>
+    <resources>
+    <style name="Theme">
+    <item name="android:windowLayoutInDisplayCutoutMode">
+    shortEdges
+    </item>
+    </style>
+    </resources>' > src/main/res/values-v27/styles.xml
+    sed -i "s/android:theme=.*/android:theme=\"@style\/Theme\"/" src/main/AndroidManifest.xml
+
     cd ../../../../
     ln -s $(pwd)/assets build/android/$ANDROID_PROJECT/app/src/main/
 fi
