@@ -1,55 +1,27 @@
-#include <SDL.h>
-#include <SDL_image.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "SDL.h"
+#include "SDL_image.h"
+
+static SDL_Window *win;
+static SDL_Renderer *ren;
+
+static int setup(void);
+static void shutdown(void);
+static SDL_bool running = SDL_FALSE;
 
 int main(int argc, char *argv[])
 {
-    int running = 1;
+    if (setup() < 0)
+        shutdown();
 
     int frames = 0;
     Uint32 last_frame_time = 0;
     char fps[512];
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
-    }
-
-    SDL_Window *win = SDL_CreateWindow("Hello World!", SDL_WINDOWPOS_CENTERED,
-                                       SDL_WINDOWPOS_CENTERED, 1920, 1080,
-                                       SDL_WINDOW_RESIZABLE);
-    if (win == NULL) {
-        fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
-    }
-
-    // SDL_Renderer *ren = SDL_CreateRenderer(win, -1,
-    // SDL_RENDERER_PRESENTVSYNC);
-    SDL_Renderer *ren = SDL_CreateRenderer(win, -1, 0);
-    if (ren == NULL) {
-        fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
-        if (win != NULL) {
-            SDL_DestroyWindow(win);
-        }
-        SDL_Quit();
-        return EXIT_FAILURE;
-    }
-
-    int imgFlags = IMG_INIT_PNG;
-    if (!(IMG_Init(imgFlags) & imgFlags)) {
-        printf("SDL_image could not initialize! SDL_image Error: %s\n",
-               IMG_GetError());
-    }
-
     SDL_Texture *tex = IMG_LoadTexture(ren, "img.png");
     if (tex == NULL) {
-        fprintf(stderr, "SDL_CreateTextureFromSurface Error: %s\n",
-                SDL_GetError());
-        SDL_DestroyRenderer(ren);
-        SDL_DestroyWindow(win);
-        SDL_Quit();
-        return EXIT_FAILURE;
+        SDL_Log("Error loading texture: %s\n", SDL_GetError());
+        shutdown();
+        return -1;
     }
 
     while (running) {
@@ -64,7 +36,7 @@ int main(int argc, char *argv[])
         SDL_Event evt;
         while (SDL_PollEvent(&evt)) {
             if (evt.type == SDL_QUIT)
-                goto cleanup;
+                running = SDL_FALSE;
         }
         SDL_RenderClear(ren);
         SDL_Rect dstrect = {0, 0, 32, 32};
@@ -78,15 +50,50 @@ int main(int argc, char *argv[])
             }
         }
         SDL_RenderPresent(ren);
-
-        SDL_SetWindowTitle(win, fps);
     }
 
-cleanup:
     SDL_DestroyTexture(tex);
+    shutdown();
+
+    return 0;
+}
+
+static int setup(void)
+{
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        SDL_Log("SDL_Init Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    win =
+        SDL_CreateWindow("ISGT", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                         1920, 1080, SDL_WINDOW_RESIZABLE);
+    if (win == NULL) {
+        SDL_Log("SDL_CreateWindow Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    ren = SDL_CreateRenderer(win, -1, 0);
+    if (ren == NULL) {
+        SDL_Log("SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        SDL_Log("SDL_image could not initialize! SDL_image Error: %s\n",
+                IMG_GetError());
+        return -1;
+    }
+
+    running = SDL_TRUE;
+
+    return 0;
+}
+
+static void shutdown(void)
+{
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
+    IMG_Quit();
     SDL_Quit();
-
-    return EXIT_SUCCESS;
 }
