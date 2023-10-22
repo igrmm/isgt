@@ -1,24 +1,22 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(isgt)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(LIBS SDL2 SDL2_image)
-
-foreach(LIB IN LISTS LIBS)
-    find_package(${LIB} REQUIRED)
-endforeach()
+add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(external/SDL_image EXCLUDE_FROM_ALL)
 
 add_executable(${PROJECT_NAME}
     WIN32
     src/main.c
     )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
-
 if(MINGW)
     target_link_libraries(${PROJECT_NAME} PRIVATE mingw32)
 endif()
 
-list(INSERT LIBS 0 SDL2main)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    SDL2::SDL2main
+    SDL2::SDL2
+    SDL2_image
+    )
