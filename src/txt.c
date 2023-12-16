@@ -75,8 +75,8 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
     SDL_FreeSurface(dummy_glyph);
 
     // create atlas surface
-    SDL_Surface *atlas_surface =
-        SDL_CreateRGBSurface(0, ATLAS_SIZE, ATLAS_SIZE, 32, 0, 0, 0, 0);
+    SDL_Surface *atlas_surface = SDL_CreateRGBSurface(
+        0, ATLAS_SIZE, ATLAS_SIZE, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
     if (atlas_surface == NULL) {
         txt_destroy_font(font);
         return NULL;
@@ -86,7 +86,7 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
     SDL_Surface *glyph = NULL;
     int cursor_x = 0, cursor_y = 0;
     SDL_Rect glyph_atlas_rect = {0, 0, font->glyph_w, font->glyph_h};
-    for (size_t codepoint = '!'; codepoint < UNICODE_MAX; codepoint++) {
+    for (size_t codepoint = ' '; codepoint < UNICODE_MAX; codepoint++) {
         if (cache->data[codepoint] == SDL_TRUE) {
             glyph = TTF_RenderGlyph32_Blended(ttf, codepoint, font_color);
             if (glyph == NULL) {
@@ -146,4 +146,27 @@ void txt_destroy_font(struct txt_font *font)
             SDL_DestroyTexture(font->atlas);
         SDL_free(font);
     }
+}
+
+int txt(const char *str, float x, float y, SDL_Renderer *ren,
+        struct txt_font *font)
+{
+    Uint32 codepoints[CODEPOINT_BUFSIZ] = {0};
+    SDL_Rect src_rect = {0, 0, font->glyph_w, font->glyph_h};
+    SDL_FRect dst_rect = {x, y, font->glyph_w, font->glyph_h};
+
+    if (txt_get_codepoints(codepoints, CODEPOINT_BUFSIZ, str) < 0)
+        return -1;
+
+    for (int i = 0; i < CODEPOINT_BUFSIZ; i++) {
+        if (codepoints[i] == 0)
+            break;
+
+        src_rect.x = font->glyphs_x[codepoints[i]] * font->glyph_w;
+        src_rect.y = font->glyphs_y[codepoints[i]] * font->glyph_h;
+        dst_rect.x = x + i * font->glyph_w;
+        SDL_RenderCopyF(ren, font->atlas, &src_rect, &dst_rect);
+    }
+
+    return 0;
 }

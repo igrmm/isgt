@@ -14,5 +14,7 @@ struct txt_codepoint_cache *txt_create_codepoint_cache(void);
 struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
                                  TTF_Font *ttf, SDL_Renderer *ren);
 void txt_destroy_font(struct txt_font *font);
+int txt(const char *str, float x, float y, SDL_Renderer *ren,
+        struct txt_font *font);
 
 #endif
