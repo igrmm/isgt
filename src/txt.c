@@ -74,13 +74,15 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
     font->glyph_h = dummy_glyph->h;
     SDL_FreeSurface(dummy_glyph);
 
-    // create atlas surface
-    SDL_Surface *atlas_surface = SDL_CreateRGBSurface(
-        0, ATLAS_SIZE, ATLAS_SIZE, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
-    if (atlas_surface == NULL) {
+    // create atlas
+    font->atlas =
+        SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888,
+                          SDL_TEXTUREACCESS_TARGET, ATLAS_SIZE, ATLAS_SIZE);
+    if (font->atlas == NULL) {
         txt_destroy_font(font);
         return NULL;
     }
+    SDL_SetTextureBlendMode(font->atlas, SDL_BLENDMODE_BLEND);
 
     // populate atlas surface with cached glyphs
     SDL_Surface *glyph = NULL;
@@ -90,14 +92,12 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
         if (cache->data[codepoint] == SDL_TRUE) {
             glyph = TTF_RenderGlyph32_Blended(ttf, codepoint, font_color);
             if (glyph == NULL) {
-                SDL_FreeSurface(atlas_surface);
                 txt_destroy_font(font);
                 return NULL;
             }
 
             // if glyphs width or height vary, abort
             if (glyph->w != font->glyph_w || glyph->h != font->glyph_h) {
-                SDL_FreeSurface(atlas_surface);
                 txt_destroy_font(font);
                 SDL_FreeSurface(glyph);
                 return NULL;
@@ -106,8 +106,19 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
             glyph_atlas_rect.x = cursor_x * font->glyph_w;
             glyph_atlas_rect.y = cursor_y * font->glyph_h;
 
-            SDL_BlitSurface(glyph, &glyph->clip_rect, atlas_surface,
-                            &glyph_atlas_rect);
+            // render glyph to atlas
+            SDL_Texture *tmp = SDL_CreateTextureFromSurface(ren, glyph);
+            if (tmp == NULL) {
+                txt_destroy_font(font);
+                SDL_FreeSurface(glyph);
+                return NULL;
+            }
+            SDL_SetTextureBlendMode(tmp, SDL_BLENDMODE_NONE);
+            SDL_SetRenderTarget(ren, font->atlas);
+            SDL_RenderCopy(ren, tmp, &glyph->clip_rect, &glyph_atlas_rect);
+            SDL_SetRenderTarget(ren, NULL);
+            SDL_DestroyTexture(tmp);
+
             font->glyphs_x[codepoint] = cursor_x;
             font->glyphs_y[codepoint] = cursor_y;
 
@@ -117,7 +128,6 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
                 cursor_x = 0;
                 cursor_y++;
                 if (cursor_y * font->glyph_h + font->glyph_h > ATLAS_SIZE) {
-                    SDL_FreeSurface(atlas_surface);
                     txt_destroy_font(font);
                     SDL_FreeSurface(glyph);
                     return NULL;
@@ -126,14 +136,6 @@ struct txt_font *txt_create_font(struct txt_codepoint_cache *cache,
 
             SDL_FreeSurface(glyph);
         }
-    }
-
-    // create atlas texture from atlas surface
-    font->atlas = SDL_CreateTextureFromSurface(ren, atlas_surface);
-    SDL_FreeSurface(atlas_surface);
-    if (font->atlas == NULL) {
-        txt_destroy_font(font);
-        return NULL;
     }
 
     return font;
