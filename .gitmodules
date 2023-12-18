@@ -7,3 +7,6 @@
 [submodule "external/SDL_ttf"]
 	path = external/SDL_ttf
 	url = https://github.com/libsdl-org/SDL_ttf
+[submodule "external/wobu"]
+	path = external/wobu
+	url = https://github.com/igrmm/wobu.git

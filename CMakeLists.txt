@@ -10,7 +10,7 @@ add_subdirectory(external/SDL_ttf EXCLUDE_FROM_ALL)
 add_executable(${PROJECT_NAME}
     WIN32
     src/main.c
-    src/txt.c
+    external/wobu/src/txt.c
     )
 
 if(MINGW)

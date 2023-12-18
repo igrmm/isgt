@@ -1,6 +1,8 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+#include "../external/wobu/src/txt.h"
+
 static SDL_Window *win;
 static SDL_Renderer *ren;
 
@@ -20,6 +22,31 @@ int main(int argc, char *argv[])
     SDL_Texture *tex = IMG_LoadTexture(ren, "img.png");
     if (tex == NULL) {
         SDL_Log("Error loading texture: %s\n", SDL_GetError());
+        shutdown();
+        return -1;
+    }
+
+    TTF_Font *ttf = TTF_OpenFont("NotoSansMono-Regular.ttf", 26);
+    if (ttf == NULL) {
+        SDL_Log("Error loading ttf font! SDL_ttf Error: %s\n", TTF_GetError());
+        shutdown();
+        return -1;
+    }
+
+    struct txt_codepoint_cache *cache = txt_create_codepoint_cache();
+    if (cache == NULL) {
+        SDL_Log("Error creating txt_codepoint_cache.");
+        shutdown();
+        return -1;
+    }
+    // cache all ASCII table
+    for (char c = ' '; c <= '~'; c++) {
+        txt_cache_codepoint(cache, &c);
+    }
+    struct txt_font *font = txt_create_font(cache, ttf, ren);
+    SDL_free(cache);
+    if (font == NULL) {
+        SDL_Log("Error creating txt_font.");
         shutdown();
         return -1;
     }
@@ -49,10 +76,15 @@ int main(int argc, char *argv[])
                 }
             }
         }
+
+        txt("HELLO WORLD", 0, 0, ren, font);
+        txt(fps, 0, 30, ren, font);
+
         SDL_RenderPresent(ren);
     }
 
     SDL_DestroyTexture(tex);
+    txt_destroy_font(font);
     shutdown();
 
     return 0;
@@ -82,6 +114,12 @@ static int setup(void)
     if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
         SDL_Log("SDL_image could not initialize! SDL_image Error: %s\n",
                 IMG_GetError());
+        return -1;
+    }
+
+    if (TTF_Init() < 0) {
+        SDL_Log("SDL_ttf could not initialize! SDL_ttf Error: %s\n",
+                TTF_GetError());
         return -1;
     }
 
